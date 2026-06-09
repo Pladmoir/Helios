@@ -6,6 +6,8 @@ typedef unsigned long long U64; // using a bits for board representation (64 bit
 #define NAME "Helios 1.0"
 #define BOARD_SQR_NUM 120
 
+#define MAXGAMEMOVES 2048
+
 enum { EMPTY, wP, wH, wB, wR, wQ, wK, bP, bH, bB, bQ, bK }; 
 enum { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H, FILE_NONE };
 enum { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, RANK_NONE };
@@ -21,7 +23,20 @@ enum {
     A8 = 91, B8, C8, D8, E8, F8, G8, H8, NO_SQ
 };
 
-// defining structure for the chess board
+enum { WKCA = 1, WQCA = 2, BKCA = 4, BQCA = 8 }; // castling (format: colour - side being castled) represented by bits
+
+///////// Structures ////////////
+
+// structure to keep record of the history of the chess game
+typedef struct {
+    int move;
+    int castle_perm;
+    int enPas;
+    int fifty_move_count;
+    U64 posKey;
+} S_UNDO;
+
+// structure for the chess board
 typedef struct {
     int pieces[BOARD_SQR_NUM];
     U64 pawns[3]; // 2 for colors 1 for combined (acts like an array[64])
@@ -35,6 +50,8 @@ typedef struct {
     int half_moves;
     int hist_half_moves; // used for repetition rule
 
+    int castle_perm;
+
     U64 pos_key; 
 
     int piece_num[13]; // record of piece totals, piece determined by enum above
@@ -42,6 +59,8 @@ typedef struct {
     int maj_piece[3]; // rooks and queens for each colour
     int min_piece[3]; // bishops and knights for each colour
 
+    S_UNDO history[MAXGAMEMOVES]; //array of all moves
+    
 } S_BOARD;
 
 #endif
