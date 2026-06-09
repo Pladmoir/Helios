@@ -1,7 +1,7 @@
-#include "stdio.h"
-#include "stdbool.h"
+#include <stdio.h>
+#include <stdbool.h>
 #include "defs.h"
 
-int main (void) {
-    return 0;
+int main (void) { 
+    init();
 }

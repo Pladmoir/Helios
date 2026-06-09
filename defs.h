@@ -1,6 +1,11 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+#include <stdlib.h>
+#include <assert.h>
+
+// #define NDEBUG  // uncomment to disable assertion checks
+
 typedef unsigned long long U64; // using a bits for board representation (64 bits = 64 squares)
 
 #define NAME "Helios 1.0"
@@ -60,7 +65,21 @@ typedef struct {
     int min_piece[3]; // bishops and knights for each colour
 
     S_UNDO history[MAXGAMEMOVES]; //array of all moves
+
+    int piece_list[13][10]; // example of use [wH][0] = E1
     
 } S_BOARD;
+
+///////// Macros ////////////
+
+#define FR2SQ(f,r) ( (21 + f) + (r * 10)) // determines index in the 120 array based on file and rank
+
+///////// Globals ////////////
+
+extern int Sq120ToSq64[BOARD_SQR_NUM];
+extern int Sq64ToSq120[64];
+
+///////// Functions ////////////
+extern void init();
 
 #endif
