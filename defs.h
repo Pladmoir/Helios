@@ -73,6 +73,7 @@ typedef struct {
 ///////// Macros ////////////
 
 #define FR2SQ(f,r) ( (21 + f) + (r * 10)) // determines index in the 120 array based on file and rank
+#define SQ64(sq120) Sq64ToSq120[sq120]
 
 ///////// Globals ////////////
 
@@ -80,6 +81,12 @@ extern int Sq120ToSq64[BOARD_SQR_NUM];
 extern int Sq64ToSq120[64];
 
 ///////// Functions ////////////
+
+// init.c
 extern void init();
+
+//bitboards.c
+
+extern void PrintBitBoard(U64 bb);
 
 #endif
