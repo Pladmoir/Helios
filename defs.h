@@ -57,7 +57,7 @@ typedef struct {
 
     int castle_perm;
 
-    U64 pos_key; 
+    U64 pos_key; // hashkey
 
     int piece_num[13]; // record of piece totals, piece determined by enum above
     int big_piece[3]; // non-pawn pieces for each colour
@@ -73,20 +73,34 @@ typedef struct {
 ///////// Macros ////////////
 
 #define FR2SQ(f,r) ( (21 + f) + (r * 10)) // determines index in the 120 array based on file and rank
-#define SQ64(sq120) Sq64ToSq120[sq120]
+#define SQ64(sq120) Sq120ToSq64[sq120]
+#define POP(b) PopBit(b)
+#define CNT(b) CountBits(b)
+#define CLRBIT(bb,sq)  ((bb) &= ClearMask[(sq)])
+#define SETBIT(bb,sq)  ((bb) |= SetMask[(sq)])
 
 ///////// Globals ////////////
 
 extern int Sq120ToSq64[BOARD_SQR_NUM];
 extern int Sq64ToSq120[64];
+extern U64 SetMask[64];
+extern U64 ClearMask[64];
+extern U64 PieceKeys[13][120]; // key based on pieces
+extern U64 SideKey; // key for side 
+extern U64 CastleKey[16];// key for castle status
 
 ///////// Functions ////////////
 
 // init.c
 extern void init();
 
-//bitboards.c
+// bitboards.c
 
 extern void PrintBitBoard(U64 bb);
+extern int PopBit(U64 *bb);
+extern int CountBits(U64 b);
+
+// hashkeys.c
+extern U64 GeneratePositionKey (const S_BOARD *pos);
 
 #endif
