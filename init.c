@@ -2,10 +2,10 @@
 #include <stdlib.h>
 
 // generates a 64 bit random number
-#define RAND_64 (   (U64)rand() + \
-                    (U64)rand() << 15 + \
-                    (U64)rand() << 30 + \
-                    (U64)rand() << 45 + \
+#define RAND_64 (   (U64)rand() | \
+                    (U64)rand() << 15 | \
+                    (U64)rand() << 30 | \
+                    (U64)rand() << 45 | \
                     ((U64)rand() & 0xf) << 60  )
 
 

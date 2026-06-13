@@ -1,8 +1,32 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include "defs.h"
 
+void UpdateListsMaterials (S_BOARD *pos) {
+    int piece, sq, index, colour;
+
+    for(index = 0; index < BOARD_SQR_NUM; ++index) {
+        sq = index;
+        piece = pos->pieces[index];
+        if (piece != OFFBOARD && piece != EMPTY) {
+            colour = PieceColour[piece];
+            if (PieceBig[piece] == true) pos->big_piece[colour]++;
+            if (PieceMajor[piece] == true) pos->maj_piece[colour]++;
+            if (PieceMinor[piece] == true) pos->min_piece[colour]++;
+
+            pos->material[colour] += PieceValue[piece];
+
+            pos->piece_list[piece][pos->piece_num[piece]] = sq;;
+            pos->piece_num[piece]++;
+
+            if (piece == wK) pos->KingSq[WHITE] = sq;
+            if (piece == bK) pos->KingSq[BLACK] = sq;
+        }
+    }
+}
+
 // decipher FEN notation into our board structure
-int Parse_Fen (char *fen, S_BOARD *pos) {
+int ParseFen (char *fen, S_BOARD *pos) {
     assert(fen != NULL);
     assert(pos != NULL);
 
@@ -47,7 +71,7 @@ int Parse_Fen (char *fen, S_BOARD *pos) {
             case '/':
             case ' ':
                 rank--;
-                FILE_A;
+                file = FILE_A;
                 fen++;
                 continue;
             
@@ -57,7 +81,7 @@ int Parse_Fen (char *fen, S_BOARD *pos) {
         }
 
         for (i = 0; i < count; ++i) {
-            sq64 = rank * 8 + file;
+            sq64 = (rank * 8) + file;
             sq120 = SQ120(sq64);
             if (piece != EMPTY) {
                 pos->pieces[sq120] = piece;
@@ -99,6 +123,8 @@ int Parse_Fen (char *fen, S_BOARD *pos) {
 
     pos->pos_key = GeneratePositionKey(pos);
 
+    UpdateListsMaterials(pos);
+
     return 0;
 }
 
@@ -115,10 +141,13 @@ void ResetBoard(S_BOARD * pos) {
         pos->pieces[SQ120(index)] = EMPTY;
     }
 
-    for(index = 0; index < 3; ++index) {
+    for(index = 0; index < 2; ++index) {
         pos->big_piece[index] = 0;
         pos->maj_piece[index] = 0;
         pos->min_piece[index] = 0;
+    }
+
+     for(index = 0; index < 3; ++index) {
         pos->pawns[index] = 0ULL;
     }
 
@@ -134,4 +163,37 @@ void ResetBoard(S_BOARD * pos) {
     pos->hist_half_moves = 0;
     pos->castle_perm = 0;
     pos->pos_key = 0ULL;
+}
+
+void PrintBoard(const S_BOARD *pos) {
+    int sq, file, rank, piece;
+
+    printf("\nGame Board: \n \n");
+
+    //print the pieces and rank
+    for (rank = RANK_8; rank >= RANK_1; rank--) {
+        printf("%d  ",rank + 1);
+        for (file = FILE_A; file <= FILE_H; file++) {
+            sq = FR2SQ(file, rank);
+            piece = pos->pieces[sq];
+            printf("%3c",PieceChar[piece]);
+        }
+        printf("\n");
+    }
+    printf("\n   ");
+
+    // print the file characters
+     for (file = FILE_A; file <= FILE_H; file++) {
+         printf("%3c",'a' + file);
+    }
+    printf("\n");
+    printf("side:%c\n",SideChar[pos->side]);
+    printf("enPas:%d\n",pos->enPas);
+    printf("castle:%c%c%c%c\n",
+            pos->castle_perm & WKCA? 'K': '-',
+            pos->castle_perm & WQCA? 'Q': '-',
+            pos->castle_perm & BKCA? 'k': '-',
+            pos->castle_perm & BQCA? 'q': '-'
+        );
+    printf("PosKey:%llX\n", pos->pos_key);
 }

@@ -10,7 +10,7 @@ U64 GeneratePositionKey (const S_BOARD *pos) {
     // loops through all squares and generates a final position key
     for (sq = 0; sq < BOARD_SQR_NUM; ++sq) {
         piece = pos->pieces[sq];
-        if(piece != NO_SQ && piece != EMPTY) {
+        if(piece != NO_SQ && piece != EMPTY && piece != OFFBOARD) {
             assert(piece >= wP && piece <= bK); // assert piece value is in valid range
             finalKey ^= PieceKeys[piece][sq];
         }

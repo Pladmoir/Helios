@@ -62,9 +62,10 @@ typedef struct {
     U64 pos_key; // hashkey
 
     int piece_num[13]; // record of piece totals, piece determined by enum above
-    int big_piece[3]; // non-pawn pieces for each colour
-    int maj_piece[3]; // rooks and queens for each colour
-    int min_piece[3]; // bishops and knights for each colour
+    int big_piece[2]; // non-pawn pieces for each colour
+    int maj_piece[2]; // rooks and queens for each colour
+    int min_piece[2]; // bishops and knights for each colour
+    int material[2]; // material values for black and white
 
     S_UNDO history[MAXGAMEMOVES]; //array of all moves
 
@@ -91,6 +92,16 @@ extern U64 ClearMask[64];
 extern U64 PieceKeys[13][120]; // key based on pieces
 extern U64 SideKey; // key for side 
 extern U64 CastleKey[16];// key for castle status
+extern char PieceChar[];
+extern char SideChar[];
+extern char RankChar[];
+extern char FileChar[];
+
+extern int PieceBig[13];
+extern int PieceMajor[13];
+extern int PieceMinor[13];
+extern int PieceValue[13];
+extern int PieceColour[13];
 
 ///////// Functions ////////////
 
@@ -98,12 +109,17 @@ extern U64 CastleKey[16];// key for castle status
 extern void init();
 
 // bitboards.c
-
 extern void PrintBitBoard(U64 bb);
 extern int PopBit(U64 *bb);
 extern int CountBits(U64 b);
 
 // hashkeys.c
 extern U64 GeneratePositionKey (const S_BOARD *pos);
+
+// board.c
+extern void ResetBoard(S_BOARD * pos);
+extern int ParseFen (char *fen, S_BOARD *pos);
+extern void PrintBoard(const S_BOARD *pos);
+extern void UpdateListsMaterials (S_BOARD *pos);
 
 #endif
