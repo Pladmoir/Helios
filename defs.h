@@ -103,6 +103,9 @@ extern int PieceMinor[13];
 extern int PieceValue[13];
 extern int PieceColour[13];
 
+extern int FilesBrd[BOARD_SQR_NUM];
+extern int RanksBrd[BOARD_SQR_NUM];
+
 ///////// Functions ////////////
 
 // init.c
@@ -121,5 +124,6 @@ extern void ResetBoard(S_BOARD * pos);
 extern int ParseFen (char *fen, S_BOARD *pos);
 extern void PrintBoard(const S_BOARD *pos);
 extern void UpdateListsMaterials (S_BOARD *pos);
+extern int CheckBoard(const S_BOARD *pos);
 
 #endif

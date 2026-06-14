@@ -7,4 +7,6 @@
 int main (void) { 
     init();
 
+    S_BOARD board[1];
+
 }

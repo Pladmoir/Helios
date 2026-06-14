@@ -1,5 +1,6 @@
 #include "defs.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 // generates a 64 bit random number
 #define RAND_64 (   (U64)rand() | \
@@ -19,6 +20,31 @@ U64 ClearMask[64];
 U64 PieceKeys[13][120]; // key based on pieces
 U64 SideKey; // key for side 
 U64 CastleKey[16]; // key for catle side (4 bits)
+
+int FilesBrd[BOARD_SQR_NUM];
+int RanksBrd[BOARD_SQR_NUM];
+
+// inititalize the file and rank arrays
+void InitFilesRanksBrd() {
+    int index = 0;
+    int file = FILE_A;
+    int rank = RANK_1;
+    int sq = A1;
+    int sq64 = 0;
+
+    for(index = 0; index < BOARD_SQR_NUM; ++index) {
+        FilesBrd[index] = OFFBOARD;
+        RanksBrd[index] = OFFBOARD;
+    }
+
+    for (rank = RANK_1; rank <= RANK_8; ++rank) {
+        for(file = FILE_A; file <= FILE_H; ++file) {
+            sq = FR2SQ(file, rank);
+            FilesBrd[sq] = file;
+            RanksBrd[sq] = rank;
+        }
+    }
+}
 
 // fill out PieceKeys, SideKey, and CastleKey with random 64 bit numbers
 void InitHashKeys() {
@@ -81,4 +107,5 @@ void init() {
     InitSq120To64();
     InitBitMasks();
     InitHashKeys();
+    InitFilesRanksBrd();
 }
