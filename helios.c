@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include "defs.h"
 
-
 int main (void) { 
     init();
 
     S_BOARD board[1];
+    S_MOVELIST list[1];
+
+    GenerateAllMoves(board, list);
 
 }

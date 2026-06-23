@@ -12,6 +12,7 @@ typedef unsigned long long U64; // using a bits for board representation (64 bit
 #define BOARD_SQR_NUM 120
 
 #define MAXGAMEMOVES 2048
+#define MAXPOSITIONMOVES 256
 
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -33,6 +34,16 @@ enum {
 enum { WKCA = 1, WQCA = 2, BKCA = 4, BQCA = 8 }; // castling (format: colour - side being castled) represented by bits
 
 ///////// Structures ////////////
+
+typedef struct {
+    int move;
+    int score;
+} S_MOVE;
+
+typedef struct {
+    S_MOVE moves [MAXPOSITIONMOVES];
+    int count;
+} S_MOVELIST;
 
 // structure to keep record of the history of the chess game
 typedef struct {
@@ -72,6 +83,22 @@ typedef struct {
     int piece_list[13][10]; // example of use [wH][0] = E1
     
 } S_BOARD;
+
+///////// Game Move ////////////
+
+// 7 bits: from, 7 bits: to, 4 bits: captured, 1 bit: enPas, 1 bit: Pawn Start, 4 bits: Promoted Piece, 1 bit: castle
+
+#define FROMSQ(m) ((m) & 0x7F) // provides square moved from
+#define TOSQ(m) (((m)>>7) & 0x7F) // provides squared moved to
+#define CAPTURED(m) (((m)>>14) & 0xF) // provides captured piece
+#define PROMOTED(m) (((m)>>20) & 0xF) // provides promoted piece
+
+#define MFLAGEP 0x4000 // checks if there was an enPas
+#define MFLAGPS 0x8000 // checks if there was a pawn start
+#define MFLAGCASTLE 0x1000000 // checks if there was a castle
+
+#define MFLAGCAP 0x7C000 // checks if any piece was captured
+#define MFLAGPROM 0xF00000 // checks if any piece was promoted
 
 ///////// Macros ////////////
 
@@ -114,6 +141,7 @@ extern int PieceKnight[13];
 extern int PieceKing[13];
 extern int PieceRookQueen[13];
 extern int PieceBishopQueen[13];
+extern int PieceSlides[13];
 
 ///////// Functions ////////////
 
@@ -137,4 +165,20 @@ extern int CheckBoard(const S_BOARD *pos);
 
 // attack.c
 extern int SqAttacked (const int sq, const int attack_side, const S_BOARD *pos);
+
+// io.c
+extern char *PrSq(const int sq);
+extern char *PrMove (const int move);
+extern void PrintMoveList(const S_MOVELIST *list);
+
+// validate.c
+extern int SqOnBoard(const int sq);
+extern int SideValid(const int side);
+extern int FileRankValid(const int fr);
+extern int PieceValidEmpty(const int piece);
+extern int PieceValid(const int piece);
+
+// movegen.c
+extern void GenerateAllMoves (const S_BOARD *pos,  S_MOVELIST *list );
+
 #endif

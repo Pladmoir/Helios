@@ -10,6 +10,10 @@ const int KiDir[8] = {-1, -10, 1, 10, -9, -11, 11, 9};
 int SqAttacked (const int sq, const int attack_side, const S_BOARD *pos) {
     int piece, index, temp_sq, dir;
 
+    assert(SqOnBoard(sq));
+    assert(SideValid(attack_side));
+    assert(CheckBoard(pos));
+
     // pawns
 
     if (attack_side == WHITE) {

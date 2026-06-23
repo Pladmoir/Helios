@@ -17,5 +17,5 @@ int PieceKnight[13] = {false, false, true, false, false, false, false, false, tr
 int PieceKing[13] = {false, false, false, false, false, false, true, false, false, false, false, false, true};
 int PieceRookQueen[13] = {false, false, false, false, true, true, false, false, false, false, true, true, false};
 int PieceBishopQueen[13] = {false, false, false, true, false, true, false, false, false, true, false, true, false};
-
+int PieceSlides[13] = {false, false, false, true, true, true, false, false, false, true, true, true, false};
 
