@@ -29,7 +29,7 @@ int SqAttacked (const int sq, const int attack_side, const S_BOARD *pos) {
     // knights
     for (index = 0; index < 8; ++index) {
         piece = pos->pieces[sq + HorseDir[index]];
-        if(IsHorse(piece) && PieceColour[piece] == attack_side) {
+        if(IsHorse(piece) && PieceColour[piece] == attack_side && piece != OFFBOARD) {
             return true;
         }
     }
@@ -71,7 +71,7 @@ int SqAttacked (const int sq, const int attack_side, const S_BOARD *pos) {
     // king
     for (index = 0; index < 8; ++index) {
         piece = pos->pieces[sq + KiDir[index]];
-        if(IsKing(piece) && PieceColour[piece] == attack_side) {
+        if(IsKing(piece) && PieceColour[piece] == attack_side && piece != OFFBOARD) {
             return true;
         }
     }

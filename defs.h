@@ -1,10 +1,15 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+//#define NDEBUG  // uncomment to disable assertion checks 
+
 #include <stdlib.h>
 #include <assert.h>
 
-// #define NDEBUG  // uncomment to disable assertion checks
+#ifndef DEBUG 
+#define DEBUG 
+#endif
+
 
 typedef unsigned long long U64; // using a bits for board representation (64 bits = 64 squares)
 
@@ -93,8 +98,8 @@ typedef struct {
 #define CAPTURED(m) (((m)>>14) & 0xF) // provides captured piece
 #define PROMOTED(m) (((m)>>20) & 0xF) // provides promoted piece
 
-#define MFLAGEP 0x4000 // checks if there was an enPas
-#define MFLAGPS 0x8000 // checks if there was a pawn start
+#define MFLAGEP 0x40000 // checks if there was an enPas
+#define MFLAGPS 0x80000 // checks if there was a pawn start
 #define MFLAGCASTLE 0x1000000 // checks if there was a castle
 
 #define MFLAGCAP 0x7C000 // checks if any piece was captured
@@ -133,6 +138,7 @@ extern int PieceMajor[13];
 extern int PieceMinor[13];
 extern int PieceValue[13];
 extern int PieceColour[13];
+extern int PiecePawn[13];
 
 extern int FilesBrd[BOARD_SQR_NUM];
 extern int RanksBrd[BOARD_SQR_NUM];
@@ -180,5 +186,14 @@ extern int PieceValid(const int piece);
 
 // movegen.c
 extern void GenerateAllMoves (const S_BOARD *pos,  S_MOVELIST *list );
+
+// makemove.c
+extern int MakeMove (S_BOARD *pos, int move);
+extern void TakeMove(S_BOARD *pos);
+
+//perft.c
+extern void PerftTest(int depth, S_BOARD *pos);
+extern void PerftFile(const int depth);
+
 
 #endif
