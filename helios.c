@@ -1,15 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "defs.h"
 
 
 
 int main (void) { 
     init();
-
-    S_BOARD board[1];
-    S_MOVELIST list[1];
-
-
-   
+    Uci_Loop();  
 }

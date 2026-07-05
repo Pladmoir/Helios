@@ -1,13 +1,13 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-//#define NDEBUG  // uncomment to disable assertion checks 
+#define NDEBUG  // uncomment to disable assertion checks 
 
 #include <stdlib.h>
 #include <assert.h>
 
 #ifndef DEBUG 
-#define DEBUG 
+//#define DEBUG 
 #endif
 
 
@@ -18,6 +18,7 @@ typedef unsigned long long U64; // using a bits for board representation (64 bit
 
 #define MAXGAMEMOVES 2048
 #define MAXPOSITIONMOVES 256
+#define MAXDEPTH 64
 
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -50,6 +51,17 @@ typedef struct {
     int count;
 } S_MOVELIST;
 
+// structure of the entry into the principle varaition table
+typedef struct {
+    U64 pos_key;
+    int move;
+} S_PVENTRY;
+
+typedef struct {
+    S_PVENTRY *p_table;
+    int num_entries;
+} S_PVTABLE;
+
 // structure to keep record of the history of the chess game
 typedef struct {
     int move;
@@ -70,8 +82,8 @@ typedef struct {
     int enPas; // keep track of en-passent square
     int fifty_move_count;
 
-    int half_moves;
-    int hist_half_moves; // used for repetition rule
+    int half_moves; // half moves for a positon (used for search)
+    int hist_half_moves; // half  moves done for the entire game
 
     int castle_perm;
 
@@ -86,8 +98,29 @@ typedef struct {
     S_UNDO history[MAXGAMEMOVES]; //array of all moves
 
     int piece_list[13][10]; // example of use [wH][0] = E1
+
+    S_PVTABLE Pv_Table[1];
+    int PvArray[MAXDEPTH];
+
+    int search_history[13][BOARD_SQR_NUM]; 
+    int search_killers[2][MAXDEPTH]; // most recent beta cutoff move [0][depth] == best move [1][depth] == second best
     
 } S_BOARD;
+
+typedef struct {
+    int starttime;
+    int stoptime;
+    int depth;
+    int depthset;
+    int timeset;
+    int movestogo;
+    int infinite;
+    long nodes;
+    int quit;
+    int stopped;
+    float fhf; // number of time we get beta cutoff on first move of the search
+    float fh; // number of time we get beta cutoff in total during the search 
+} S_SEARCHINFO;
 
 ///////// Game Move ////////////
 
@@ -105,9 +138,14 @@ typedef struct {
 #define MFLAGCAP 0x7C000 // checks if any piece was captured
 #define MFLAGPROM 0xF00000 // checks if any piece was promoted
 
+#define NOMOVE 0
+
+#define INFINITE 30000
+#define MATE 29000
+
 ///////// Macros ////////////
 
-#define FR2SQ(f,r) ( (21 + f) + (r * 10)) // determines index in the 120 array based on file and rank
+#define FR2SQ(f,r) ( (21 + (f)) + ((r) * 10)) // determines index in the 120 array based on file and rank
 #define SQ64(sq120) (Sq120ToSq64[(sq120)])
 #define SQ120(sq64) (Sq64ToSq120[(sq64)])
 #define POP(b) PopBit(b)
@@ -168,6 +206,7 @@ extern int ParseFen (char *fen, S_BOARD *pos);
 extern void PrintBoard(const S_BOARD *pos);
 extern void UpdateListsMaterials (S_BOARD *pos);
 extern int CheckBoard(const S_BOARD *pos);
+extern S_BOARD *GenBoard ();
 
 // attack.c
 extern int SqAttacked (const int sq, const int attack_side, const S_BOARD *pos);
@@ -176,6 +215,7 @@ extern int SqAttacked (const int sq, const int attack_side, const S_BOARD *pos);
 extern char *PrSq(const int sq);
 extern char *PrMove (const int move);
 extern void PrintMoveList(const S_MOVELIST *list);
+extern int ParseMove(char *ptrChar, S_BOARD *pos);
 
 // validate.c
 extern int SqOnBoard(const int sq);
@@ -186,14 +226,36 @@ extern int PieceValid(const int piece);
 
 // movegen.c
 extern void GenerateAllMoves (const S_BOARD *pos,  S_MOVELIST *list );
+extern int MoveExists(S_BOARD *pos, const int move);
+extern void InitMvvLva();
+extern void GenerateAllCaps (const S_BOARD *pos,  S_MOVELIST *list );
 
 // makemove.c
 extern int MakeMove (S_BOARD *pos, int move);
 extern void TakeMove(S_BOARD *pos);
 
-//perft.c
+// perft.c
 extern void PerftTest(int depth, S_BOARD *pos);
 extern void PerftFile(const int depth);
 
+// search.c
+extern void SearchPosition(S_BOARD *pos, S_SEARCHINFO *info);
+
+// misc.c
+extern int GetTimeMs();
+extern void ReadInput(S_SEARCHINFO *info);
+
+// pvtable.c
+extern void InitPvTable(S_PVTABLE *table);
+extern void StorePvMove(const S_BOARD *pos, const int move);
+extern int ProbePvTable(const S_BOARD *pos);
+extern int GetPvLine(const int depth, S_BOARD *pos);
+extern void ClearPvTable(S_PVTABLE * table);
+
+// evaluate.c
+extern int EvalPosition(const S_BOARD *pos);
+
+// uci.c
+extern void Uci_Loop();
 
 #endif

@@ -218,6 +218,12 @@ int ParseFen (char *fen, S_BOARD *pos) {
     return 0;
 }
 
+S_BOARD *GenBoard () {
+    S_BOARD *board = (S_BOARD*)malloc(sizeof(S_BOARD));
+    board->Pv_Table->p_table = NULL;
+    return board;
+}
+
 // Reset the chess board
 void ResetBoard(S_BOARD * pos) {
     assert(pos != NULL);
