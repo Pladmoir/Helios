@@ -152,7 +152,7 @@ static int AlphaBeta(int alpha, int beta, int depth, S_BOARD *pos, S_SEARCHINFO 
     info->nodes++;
 
     // returns draw evaluation
-    if(IsRepetition(pos) || pos->fifty_move_count >= 100) {
+    if((IsRepetition(pos) || pos->fifty_move_count >= 100) && pos->half_moves) {
         return 0;
     }
 
@@ -161,13 +161,33 @@ static int AlphaBeta(int alpha, int beta, int depth, S_BOARD *pos, S_SEARCHINFO 
         return EvalPosition(pos);
     }
 
+    int InCheck = SqAttacked(pos->KingSq[pos->side],pos->side^1,pos);
+
+	if(InCheck == true) {
+		depth++;
+	}
+
+    int score = -INFINITE;
+    
+    if (DoNull && !InCheck && pos->half_moves && (pos->big_piece[pos->side] > 1) && depth >= 4) {
+        MakeNullMove(pos);
+        score = -AlphaBeta( -beta, -beta + 1, depth - 4, pos, info, false);
+        TakeNullMove(pos);
+        if (info->stopped == true) {
+            return 0;
+        }
+        if (score >= beta) {
+            return beta;
+        }
+    } 
+
     S_MOVELIST list[1];
     GenerateAllMoves(pos,list);
     int move_num = 0;
     int legal = 0;
     int old_alpha = alpha;
     int best_move = 0;
-    int score = -INFINITE;
+    score = -INFINITE;
     int PvMove = ProbePvTable(pos);
 
     // if the move has been shown to be the best move before search it first

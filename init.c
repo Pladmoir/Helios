@@ -24,6 +24,83 @@ U64 CastleKey[16]; // key for catle side (4 bits)
 int FilesBrd[BOARD_SQR_NUM];
 int RanksBrd[BOARD_SQR_NUM];
 
+U64 FileBBMask[8];
+U64 RankBBMask[8];
+U64 BlackPassedMask[64];
+U64 WhitePassedMask[64];
+U64 IsolatedMask[64];
+
+void InitEvalMasks() {
+    int sq, temp_sq, rank, file;
+    
+    // initialize arrays
+    for(sq = 0; sq < 8; ++sq) {
+        FileBBMask[sq] = 0ULL;
+        RankBBMask[sq] = 0ULL;
+    }
+
+    for(rank = RANK_8; rank >= RANK_1; rank--) {
+        for(file = FILE_A; file <= FILE_H; file++) {
+            sq = rank * 8 + file;
+            FileBBMask[file] |= (1ULL << sq);
+            RankBBMask[rank] |= (1ULL << sq);
+        }
+    }
+
+    for(sq = 0; sq < 64; ++sq) {
+        IsolatedMask[sq] = 0ULL;
+        WhitePassedMask[sq] = 0ULL;
+        BlackPassedMask[sq] = 0ULL;
+    }
+
+    // initialize passed pawn array  
+    for(sq = 0; sq < 64; ++sq) {
+        temp_sq = sq + 8;
+        while(temp_sq < 64) {
+            WhitePassedMask[sq] |= (1ULL << temp_sq);
+            temp_sq += 8;
+        }
+
+        temp_sq = sq - 8;
+        while(temp_sq >= 0) {
+            BlackPassedMask[sq] |= (1ULL << temp_sq);
+            temp_sq -= 8;
+        }
+
+        if(FilesBrd[SQ120(sq)] > FILE_A) {
+            IsolatedMask[sq] |= FileBBMask[FilesBrd[SQ120(sq)] - 1];
+
+            temp_sq = sq + 7;
+            while(temp_sq < 64) {
+                WhitePassedMask[sq] |= (1ULL << temp_sq);
+                temp_sq += 8;
+            }
+
+            temp_sq = sq - 9;
+            while(temp_sq >= 0) {
+                BlackPassedMask[sq] |= (1ULL << temp_sq);
+                temp_sq -= 8;
+            }
+        }
+
+        if(FilesBrd[SQ120(sq)] < FILE_H) {
+            IsolatedMask[sq] |= FileBBMask[FilesBrd[SQ120(sq)] + 1];
+
+            temp_sq = sq + 9;
+            while(temp_sq < 64) {
+                WhitePassedMask[sq] |= (1ULL << temp_sq);
+                temp_sq += 8;
+            }
+
+            temp_sq = sq - 7;
+            while(temp_sq >= 0) {
+                BlackPassedMask[sq] |= (1ULL << temp_sq);
+                temp_sq -= 8;
+            }
+        }
+    }
+}
+
 // inititalize the file and rank arrays
 void InitFilesRanksBrd() {
     int index = 0;
@@ -109,5 +186,6 @@ void init() {
     InitBitMasks();
     InitHashKeys();
     InitFilesRanksBrd();
+    InitEvalMasks();
     InitMvvLva();
 }

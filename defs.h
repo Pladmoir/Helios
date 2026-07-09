@@ -156,6 +156,7 @@ typedef struct {
 #define IsRQ(p) (PieceRookQueen[(p)])
 #define IsKing(p) (PieceKing[(p)])
 #define IsHorse(p) (PieceKnight[(p)])
+#define MIRROR64(sq) (Mirror64[(sq)])
 
 ///////// Globals ////////////
 
@@ -187,6 +188,13 @@ extern int PieceRookQueen[13];
 extern int PieceBishopQueen[13];
 extern int PieceSlides[13];
 
+extern int Mirror64[64];
+extern U64 FileBBMask[8];
+extern U64 RankBBMask[8];
+extern U64 BlackPassedMask[64];
+extern U64 WhitePassedMask[64];
+extern U64 IsolatedMask[64];
+
 ///////// Functions ////////////
 
 // init.c
@@ -207,6 +215,7 @@ extern void PrintBoard(const S_BOARD *pos);
 extern void UpdateListsMaterials (S_BOARD *pos);
 extern int CheckBoard(const S_BOARD *pos);
 extern S_BOARD *GenBoard ();
+extern void MirrorBoard(S_BOARD *pos);
 
 // attack.c
 extern int SqAttacked (const int sq, const int attack_side, const S_BOARD *pos);
@@ -229,10 +238,13 @@ extern void GenerateAllMoves (const S_BOARD *pos,  S_MOVELIST *list );
 extern int MoveExists(S_BOARD *pos, const int move);
 extern void InitMvvLva();
 extern void GenerateAllCaps (const S_BOARD *pos,  S_MOVELIST *list );
+extern void MirrorEvalTest(S_BOARD *pos);
 
 // makemove.c
 extern int MakeMove (S_BOARD *pos, int move);
 extern void TakeMove(S_BOARD *pos);
+extern void MakeNullMove(S_BOARD *pos);
+extern void TakeNullMove(S_BOARD *pos);
 
 // perft.c
 extern void PerftTest(int depth, S_BOARD *pos);

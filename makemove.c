@@ -299,3 +299,47 @@ void TakeMove(S_BOARD *pos) {
     assert(CheckBoard(pos));
 
 }
+
+// makes an empty move for the purpose of null move pruning
+void MakeNullMove(S_BOARD *pos) {
+    assert(CheckBoard(pos));
+    assert(!SqAttacked(pos->KingSq[pos->side], pos->side ^ 1, pos));
+
+    pos->half_moves++;
+    pos->history[pos->hist_half_moves].posKey = pos->pos_key;
+
+    if(pos->enPas != NO_SQ) HASH_EP;
+
+    pos->history[pos->hist_half_moves].move = NOMOVE;
+    pos->history[pos->hist_half_moves].fifty_move_count = pos->fifty_move_count;
+    pos->history[pos->hist_half_moves].enPas = pos->enPas;
+    pos->history[pos->hist_half_moves].castle_perm = pos->castle_perm;
+    pos->enPas = NO_SQ;
+
+    pos->side ^= 1;
+    pos->hist_half_moves++;
+    HASH_SIDE;
+
+    assert(CheckBoard(pos));
+
+    return;
+}
+
+void TakeNullMove(S_BOARD *pos) {
+    assert(CheckBoard(pos));
+
+    pos->hist_half_moves--;
+    pos->half_moves--;
+
+    if(pos->enPas != NO_SQ) HASH_EP;
+
+    pos->castle_perm = pos->history[pos->hist_half_moves].castle_perm;
+    pos->fifty_move_count = pos->history[pos->hist_half_moves].fifty_move_count;
+    pos->enPas = pos->history[pos->hist_half_moves].enPas;
+
+    if(pos->enPas != NO_SQ) HASH_EP;
+    pos->side ^= 1;
+    HASH_SIDE;
+
+    assert(CheckBoard(pos));
+} 

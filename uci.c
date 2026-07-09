@@ -143,6 +143,15 @@ void Uci_Loop() {
             printf("id name %s\n", NAME);
             printf("id author Tarunvir Randhawa\n");
             printf("uciok\n");
+        } else if (!strncmp(line, "eval", 4)) {         // used for testing
+            PrintBoard(pos);
+            printf("Eval:%d\n", EvalPosition(pos));
+            MirrorBoard(pos);
+            PrintBoard(pos);
+            printf("Eval:%d\n", EvalPosition(pos));
+            MirrorBoard(pos);
+        } else if (!strncmp(line, "mirror", 6)) {
+            MirrorEvalTest(pos);
         }
 
         if(info->quit) break;

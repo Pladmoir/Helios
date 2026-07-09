@@ -294,3 +294,45 @@ void PrintBoard(const S_BOARD *pos) {
         );
     printf("PosKey:%llX\n", pos->pos_key);
 }
+
+// function to mirror board status (used for testing evaluation)
+void MirrorBoard(S_BOARD *pos) {
+    int tempPiecesArray[64];
+    int temp_side = pos->side ^ 1; // switches side
+    int SwapPiece[13] = {EMPTY,bP, bH, bB, bR, bQ, bK, wP, wH, wB, wR, wQ, wK};
+    int tempCastlePerm = 0;
+    int tempEnPas = NO_SQ;
+    int sq, temp_piece;
+
+    // flip castle permissions
+    if(pos->castle_perm & WKCA) tempCastlePerm |= BKCA;
+    if(pos->castle_perm & WKCA) tempCastlePerm |= BQCA;
+    if(pos->castle_perm & WKCA) tempCastlePerm |= WKCA;
+    if(pos->castle_perm & WKCA) tempCastlePerm |= WQCA;
+
+    // flip enpassant square
+    if(pos->enPas != NO_SQ) {
+        tempEnPas = SQ120(Mirror64[SQ64(pos->enPas)]);
+    }
+
+    //flip pieces array
+    for(sq = 0; sq < 64; sq++) {
+        tempPiecesArray[sq] = pos->pieces[SQ120(Mirror64[sq])];
+    }
+
+    ResetBoard(pos);
+
+    for(sq = 0; sq < 64; sq++) {
+        temp_piece = SwapPiece[tempPiecesArray[sq]]; // swap pieces in temp array (wR -> bR)
+        pos->pieces[SQ120(sq)] = temp_piece;
+    }
+
+    pos->side = temp_side;
+    pos->castle_perm = tempCastlePerm;
+    pos->enPas = tempEnPas;
+
+    pos->pos_key = GeneratePositionKey(pos);
+    UpdateListsMaterials(pos);
+
+    assert(CheckBoard(pos));
+}
