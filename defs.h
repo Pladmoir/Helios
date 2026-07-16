@@ -22,6 +22,10 @@ typedef unsigned long long U64; // using a bits for board representation (64 bit
 
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
+#define INF_BOUND 32000
+#define AB_BOUND 30000
+#define ISMATE (AB_BOUND - MAXDEPTH)
+
 enum { EMPTY, wP, wH, wB, wR, wQ, wK, bP, bH, bB, bR, bQ, bK }; 
 enum { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H, FILE_NONE };
 enum { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, RANK_NONE };
@@ -51,16 +55,26 @@ typedef struct {
     int count;
 } S_MOVELIST;
 
+enum { HFNONE, HFALPHA, HFBETA, HFEXACT};
+
+
 // structure of the entry into the principle varaition table
 typedef struct {
     U64 pos_key;
     int move;
-} S_PVENTRY;
+    int score;
+    int depth;
+    int flags;
+} S_HASHENTRY;
 
 typedef struct {
-    S_PVENTRY *p_table;
+    S_HASHENTRY *p_table;
     int num_entries;
-} S_PVTABLE;
+    int new_write;
+    int over_write;
+    int hit;
+    int cut;
+} S_HASHTABLE;
 
 // structure to keep record of the history of the chess game
 typedef struct {
@@ -99,7 +113,7 @@ typedef struct {
 
     int piece_list[13][10]; // example of use [wH][0] = E1
 
-    S_PVTABLE Pv_Table[1];
+    S_HASHTABLE hash_table[1];
     int PvArray[MAXDEPTH];
 
     int search_history[13][BOARD_SQR_NUM]; 
@@ -141,7 +155,6 @@ typedef struct {
 #define NOMOVE 0
 
 #define INFINITE 30000
-#define MATE 29000
 
 ///////// Macros ////////////
 
@@ -251,18 +264,19 @@ extern void PerftTest(int depth, S_BOARD *pos);
 extern void PerftFile(const int depth);
 
 // search.c
-extern void SearchPosition(S_BOARD *pos, S_SEARCHINFO *info);
+extern void SearchPosition(S_BOARD *pos, S_SEARCHINFO *info, S_HASHTABLE *table);
 
 // misc.c
 extern int GetTimeMs();
 extern void ReadInput(S_SEARCHINFO *info);
 
 // pvtable.c
-extern void InitPvTable(S_PVTABLE *table);
-extern void StorePvMove(const S_BOARD *pos, const int move);
-extern int ProbePvTable(const S_BOARD *pos);
+extern void InitHashTable(S_HASHTABLE *table);
+extern void StoreHashEntry(S_BOARD *pos, const int move, int score, const int flags, const int depth);
+extern int ProbeHashEntry(S_BOARD *pos, int *move, int *score, int alpha, int beta, int depth);
 extern int GetPvLine(const int depth, S_BOARD *pos);
-extern void ClearPvTable(S_PVTABLE * table);
+extern void ClearHashTable(S_HASHTABLE * table);
+extern int ProbePvMove(const S_BOARD *pos);
 
 // evaluate.c
 extern int EvalPosition(const S_BOARD *pos);

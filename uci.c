@@ -6,7 +6,7 @@
 #define INPUTBUFFER 400 * 6
 
 // parse the go command from the uci input
-void ParseGo(char *line, S_SEARCHINFO *info, S_BOARD *pos) {
+void ParseGo(char *line, S_SEARCHINFO *info, S_BOARD *pos, S_HASHTABLE *table) {
     int depth = -1;
     int movestogo = 30;
     int movetime = -1;
@@ -67,7 +67,7 @@ void ParseGo(char *line, S_SEARCHINFO *info, S_BOARD *pos) {
         info->depth = MAXDEPTH;
     }
     printf("time:%d start:%d stop:%d depth:%d timeset:%d\n", time, info->starttime, info->stoptime, info->depth, info->timeset);
-    SearchPosition(pos,info);
+    SearchPosition(pos,info, table);
 }
 
 // parse the positionb given by the uci input
@@ -114,7 +114,8 @@ void Uci_Loop() {
 
     S_BOARD *pos = GenBoard();
     S_SEARCHINFO info[1];
-    InitPvTable(pos->Pv_Table);
+    S_HASHTABLE hash_table[1];
+    InitHashTable(hash_table);
 
     while(1) {
         memset(&line[0], 0, sizeof(line)); // clear out line array
@@ -133,9 +134,10 @@ void Uci_Loop() {
         } else if (!strncmp(line, "position", 8)) {
             ParsePosition(line, pos);
         } else if (!strncmp(line, "ucinewgame", 10)) {
+            ClearHashTable(hash_table);
             ParsePosition("position startpos\n", pos);
         } else if (!strncmp(line, "go", 2)) {
-            ParseGo(line, info, pos);
+            ParseGo(line, info, pos, hash_table);
         } else if (!strncmp(line, "quit", 4)) {
             info->quit = true;
             break;
@@ -156,7 +158,7 @@ void Uci_Loop() {
 
         if(info->quit) break;
     }
-    free(pos->Pv_Table->p_table);
+    free(pos->hash_table->p_table);
     free(pos);
 
 }

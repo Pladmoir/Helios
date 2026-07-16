@@ -220,7 +220,7 @@ int ParseFen (char *fen, S_BOARD *pos) {
 
 S_BOARD *GenBoard () {
     S_BOARD *board = (S_BOARD*)malloc(sizeof(S_BOARD));
-    board->Pv_Table->p_table = NULL;
+    board->hash_table->p_table = NULL;
     return board;
 }
 

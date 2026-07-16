@@ -43,7 +43,7 @@ static int IsRepetition(const S_BOARD *pos) {
 }
 
 // clear the search
-static void ClearForSearch(S_BOARD *pos, S_SEARCHINFO *info) {
+static void ClearForSearch(S_BOARD *pos, S_SEARCHINFO *info, S_HASHTABLE *table) {
     int index = 0;
     int index2 = 0;
 
@@ -59,7 +59,9 @@ static void ClearForSearch(S_BOARD *pos, S_SEARCHINFO *info) {
         }
     }
 
-    ClearPvTable(pos->Pv_Table);
+    table->over_write = 0;
+    table->hit = 0;
+    table->cut = 0;
     pos->half_moves = 0;
     info->stopped = 0;
     info->nodes = 0;
@@ -98,10 +100,7 @@ static int Quiescence(int alpha, int beta,  S_BOARD *pos, S_SEARCHINFO *info) {
     GenerateAllCaps(pos,list);
     int move_num = 0;
     int legal = 0;
-    int old_alpha = alpha;
-    int best_move = 0;
-    score = -INFINITE;
-    int PvMove = ProbePvTable(pos);
+    score = -AB_BOUND;
     
     for(move_num = 0; move_num < list->count; ++move_num) {
         
@@ -127,12 +126,7 @@ static int Quiescence(int alpha, int beta,  S_BOARD *pos, S_SEARCHINFO *info) {
                 return beta;
             }
                 alpha = score;
-                best_move = list->moves[move_num].move;
         }
-    }
-
-    if(alpha != old_alpha) {
-        StorePvMove(pos, best_move);
     }
 
     return alpha;
@@ -168,7 +162,13 @@ static int AlphaBeta(int alpha, int beta, int depth, S_BOARD *pos, S_SEARCHINFO 
 	}
 
     int score = -INFINITE;
+    int PvMove = NOMOVE;
     
+    if (ProbeHashEntry(pos, &PvMove, &score, alpha, beta, depth) == true) {
+        pos->hash_table->cut++;
+        return score;
+    }
+
     if (DoNull && !InCheck && pos->half_moves && (pos->big_piece[pos->side] > 1) && depth >= 4) {
         MakeNullMove(pos);
         score = -AlphaBeta( -beta, -beta + 1, depth - 4, pos, info, false);
@@ -186,9 +186,11 @@ static int AlphaBeta(int alpha, int beta, int depth, S_BOARD *pos, S_SEARCHINFO 
     int move_num = 0;
     int legal = 0;
     int old_alpha = alpha;
-    int best_move = 0;
+    int best_move = NOMOVE;
+    int best_score = -INFINITE;
     score = -INFINITE;
-    int PvMove = ProbePvTable(pos);
+
+    
 
     // if the move has been shown to be the best move before search it first
     if(PvMove != NOMOVE) {
@@ -215,30 +217,37 @@ static int AlphaBeta(int alpha, int beta, int depth, S_BOARD *pos, S_SEARCHINFO 
             return 0;
         }
 
-        if(score > alpha) {
-            if(score >= beta) { // beta cutoff 
-                if(legal == 1) {
-                    info->fhf++;
-                }
-                info->fh++;
+        if(score > best_score) {
+            best_score = score;
+            best_move = list->moves[move_num].move;
+            if(score > alpha) {
+                if(score >= beta) { // beta cutoff 
+                    if(legal == 1) {
+                        info->fhf++;
+                    }
+                    info->fh++;
 
-                if(!(list->moves[move_num].move & MFLAGCAP)) {
-                    pos->search_killers[1][pos->half_moves] = pos->search_killers[0][pos->half_moves]; 
-                    pos->search_killers[0][pos->half_moves] = list->moves[move_num].move;
+                    if(!(list->moves[move_num].move & MFLAGCAP)) {
+                        pos->search_killers[1][pos->half_moves] = pos->search_killers[0][pos->half_moves]; 
+                        pos->search_killers[0][pos->half_moves] = list->moves[move_num].move;
+                    }
+
+                    StoreHashEntry(pos, best_move, beta, HFBETA, depth);
+
+                    return beta;
                 }
-                return beta;
-            }
                 alpha = score;
-                best_move = list->moves[move_num].move;
+
                 if(!(list->moves[move_num].move & MFLAGCAP)) {
                     pos->search_history[pos->pieces[FROMSQ(best_move)]][TOSQ(best_move)] += depth;
                 }
+            }
         }
     }
 
     if(legal == 0) {
-        if(SqAttacked(pos->KingSq[pos->side], pos->side^1, pos)) {
-            return -MATE + pos->half_moves; // distance to mate from root
+        if(InCheck) {
+            return -INFINITE + pos->half_moves; // distance to mate from root
         } else {
             return 0; // stalemate
         }
@@ -246,20 +255,22 @@ static int AlphaBeta(int alpha, int beta, int depth, S_BOARD *pos, S_SEARCHINFO 
 
     // stores best move in our pv table
     if(alpha != old_alpha) {
-        StorePvMove(pos, best_move);
+        StoreHashEntry(pos, best_move, best_score, HFEXACT, depth);
+    } else {
+        StoreHashEntry(pos, best_move, best_score, HFEXACT, depth);
     }
 
     return alpha;
 }
 
 // does iterative deepning (search alphabeta for depths 1 to max depth until time runs out or stop command)
-void SearchPosition(S_BOARD *pos, S_SEARCHINFO *info) {
+void SearchPosition(S_BOARD *pos, S_SEARCHINFO *info, S_HASHTABLE *table) {
     int best_move = NOMOVE;
     int best_score = -INFINITE;
     int curr_depth = 0; // current depth
     int pv_moves = 0;
     int pv_num = 0;
-    ClearForSearch(pos, info);
+    ClearForSearch(pos, info, table);
     
     for(curr_depth = 1; curr_depth <= info->depth; ++ curr_depth) {
         best_score = AlphaBeta(-INFINITE, INFINITE, curr_depth, pos, info, true);
